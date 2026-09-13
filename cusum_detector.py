@@ -4,7 +4,9 @@ from datetime import datetime, timedelta
 
 
 def cusum_detect(rows, baseline_windows=5, k=0.5, threshold=5.0,
-                  dest_ip="10.0.0.5", protocol="TCP"):
+                  dest_ip="10.0.0.5", protocol="TCP",
+                  threat_class="volumetric_ddos_syn_flood",
+                  ratio_field_name="syn_ack_ratio"):
     """
     Runs CUSUM change-point detection on the SYN-only/ACK ratio, and emits
     one structured alert record per window in the schema the problem
@@ -26,7 +28,10 @@ def cusum_detect(rows, baseline_windows=5, k=0.5, threshold=5.0,
     for i, row in enumerate(rows):
         x = log_ratios[i]
         deviation = (x - mu) / sigma
-        cusum = max(0.0, cusum + deviation - k)
+        if deviation <= 0:
+            cusum = 0.0
+        else:
+            cusum = max(0.0, cusum + deviation - k)
         fired = cusum > threshold
 
         confidence = round(min(cusum / threshold, 1.0), 3) if fired else round(
@@ -36,11 +41,11 @@ def cusum_detect(rows, baseline_windows=5, k=0.5, threshold=5.0,
         record = {
             "timestamp": (sim_start + timedelta(seconds=i)).isoformat() + "Z",
             "flow_id": f"{dest_ip}-{protocol}-w{i}",
-            "threat_class": "volumetric_ddos_syn_flood",
+            "threat_class": threat_class,
             "confidence": confidence,
             "alert": fired,
             "evidence": {
-                "syn_ack_ratio": row["ratio"],
+                ratio_field_name: row["ratio"],
                 "packet_rate_per_sec": row["packet_rate"],
                 "ttl_deviation": row["ttl_deviation"],
                 "cusum_value": round(cusum, 2),
