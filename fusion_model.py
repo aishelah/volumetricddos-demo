@@ -14,7 +14,33 @@ Verified in test_fusion_3branch.py before this was written.
 import numpy as np
 import xgboost as xgb
 import json
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix 
 
+def evaluate_fusion_model():
+    """
+    Train/test split evaluation -- the model never sees the test labels
+    during training. IMPORTANT: both train and test labels come from the
+    same hand-written label_row() rule, so this measures 'did the model
+    learn the rule correctly,' NOT 'does the rule match real attacks.'
+    """
+    X, y = build_training_data()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=1)
+
+    model = xgb.XGBClassifier(n_estimators=80, max_depth=3,
+                               eval_metric="logloss", random_state=0)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    metrics = {
+        "test_set_size": len(y_test),
+        "accuracy": round(accuracy_score(y_test, y_pred), 4),
+        "precision": round(precision_score(y_test, y_pred), 4),
+        "recall": round(recall_score(y_test, y_pred), 4),
+        "f1_score": round(f1_score(y_test, y_pred), 4),
+        "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
+    }
+    return metrics, model
 
 def build_training_data(rng_seed=7, n=3000):
     rng = np.random.default_rng(rng_seed)
@@ -75,7 +101,13 @@ def load_latest_confidence(alert_json_path):
 
 if __name__ == "__main__":
     model = train_fusion_model()
-
+    print("=== Fusion model evaluation (synthetic train/test split) ===")
+    metrics, _ = evaluate_fusion_model()
+    for k, v in metrics.items():
+        print(f"  {k}: {v}")
+    print("  CAVEAT: measures rule-learning fidelity on synthetic data,")
+    print("  not real-world detection accuracy -- see report for details.\n")
+    
     print("=== Synthetic design-check scenarios ===")
     print(fuse(model, 0.05, 0.05, 0.05))
     print(fuse(model, 0.9, 0.05, 0.05, syn_rate=1200))
