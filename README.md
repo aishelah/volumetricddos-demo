@@ -2,8 +2,8 @@
 
 This repo is scoped specifically to **volumetric and protocol DDoS attacks** (threat class **a** in the problem statement: SYN floods, UDP reflection/amplification, spoofed-source floods) - one of six threat-detection branches in a larger unidirectional (read-only) network threat-detection pipeline being built by the team. It does not cover C2 beaconing, DGA/DNS tunnelling, encrypted-malware detection, recon/port-scanning, or exfiltration - those are separate branches owned by other team members.
 
-**Problem Statement:** SIH 26145 - AI-Based Detection of Cyber Threats in Unidirectional IP Traffic
-**Organization:** National Technical Research Organisation (NTRO)
+- **Problem Statement:** SIH 26145 - AI-Based Detection of Cyber Threats in Unidirectional IP Traffic
+- **Organization:** National Technical Research Organisation (NTRO)
 
 ## Context
 
