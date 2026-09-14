@@ -180,3 +180,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 captures/*.pcap
+Syn-training.parquet
+Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv
